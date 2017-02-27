@@ -1,0 +1,24 @@
+{
+  "name": "pokealarm-filter-generator",
+  "version": "1.0.0",
+  "description": "Generates a PokeAlarm filter.json file based on rarities",
+  "main": "index.js",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "json-beautify": "^1.0.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/3my/pokealarm-filter-generator.git"
+  },
+  "author": "3my",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/3my/pokealarm-filter-generator/issues"
+  },
+  "homepage": "https://github.com/3my/pokealarm-filter-generator#readme"
+}
