@@ -1,4 +1,7 @@
 {
-  "rarities": "rare,very rare",
-  "same_file": "False"
+    "rarities": "rare,very rare",
+    "same_file": "True",
+    "additional_pokemon": [
+        {"Name":"Dratini"}
+    ]
 }

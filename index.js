@@ -29,13 +29,14 @@ var pokemon = require('./pokemon.json');
  * @param string rarity             Comma separated string of rarities with no spaces i.e. "very rare,rare" or "rare".
  *                                  Options: Common, Uncommon, Rare, Very Rare, Ultra Rare.
  * @param string enabled            Enable the filter? Default True.
+ * @param Array additional_pokemon  An array of objects i.e. [{"Pokemon":"True"}]
  * @param string min_dist           Minimum distance. Default 0.
  * @param string max_dist           Maximum distance. Default inf.
  * @param string min_iv             Minimum IV of Pokemon. Default 0.
  * @param string max_iv             Maximum IV of Pokemon. Default 100.
  * @param string ignore_missing     Default False.
  */
-pokemon.generateFilter = function(rarities, enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing) {
+pokemon.generateFilter = function(rarities, additional_pokemon, enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing) {
     console.log("PokeAlarm filter generator - Created by 3my\n");
 
     if (typeof rarities !== "string") {
@@ -44,7 +45,7 @@ pokemon.generateFilter = function(rarities, enabled, min_dist, max_dist, min_iv,
     } else {
         // Just incase the format is incorrect, set default (common).
         if (!(rarities.split(',') instanceof Array)) {
-            console.log("invalid format for rarities. Setting to default ['common']");
+            console.error("invalid format for rarities. Setting to default ['common']");
             rarities = ['common'];
         } else {
             console.log("multiple rarities provided (" + rarities + ")");
@@ -52,12 +53,26 @@ pokemon.generateFilter = function(rarities, enabled, min_dist, max_dist, min_iv,
         }
     }
 
-    console.log("\n");
+    additional_pokemon = additional_pokemon || [];
+
+    if (!(additional_pokemon instanceof Array)) {
+        console.error("param additional_pokemon isn't an Array. Forcing an array.");
+        additional_pokemon = [];
+    }
 
     var filenames = [];
 
+    var filter = new Filter(enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing);
+
     for (var i = 0; i < rarities.length; i++) {
-        var filter = new Filter(enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing);
+        if (config.same_file === "True") {
+            console.log("Adding Pokemon rarity " + rarities[i] + " to the same filter!");
+        }
+
+        if (config.same_file === "False" && i > 0) {
+            console.log("Creating a new filter for Pokemon rarity " + rarities[i] + "!");
+            var filter = new Filter(enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing);
+        }
 
         for (var key in this) {
             var pokemonObject = this[key];
@@ -78,6 +93,13 @@ pokemon.generateFilter = function(rarities, enabled, min_dist, max_dist, min_iv,
             }
         }
 
+        for (var j = 0; j < additional_pokemon.length; j++) {
+            if (!filter.hasOwnProperty(additional_pokemon[j].Name)) {
+                console.log("Adding additional Pokemon " + additional_pokemon[j].Name + " to the PokeAlarm filter.");
+                filter[additional_pokemon[j].Name] = "True"
+            }
+        }
+
         var rarity = rarities[i];
         var filename = rarity.split(' ').join('') + ".json";
 
@@ -91,11 +113,23 @@ pokemon.generateFilter = function(rarities, enabled, min_dist, max_dist, min_iv,
         } else {
             writeFilter(rarity, filename, filter);
         }
+
+        console.log("\n");
     }
 };
 
 var writeFilter = function(rarity, filename, filter) {
     var beautifulJSON = beautify({"pokemon": filter}, null, 2, 132);
+
+    var directory = "filters/";
+
+    // Why isn't this just included in the repo?
+    if (!fs.existsSync(directory)) {
+        console.log("Creating a directory to put filters in.");
+        fs.mkdirSync(directory);
+    }
+
+    filename = directory + filename;
 
     fs.writeFile(filename, beautifulJSON, function(error) {
         if (error) {
@@ -103,10 +137,10 @@ var writeFilter = function(rarity, filename, filter) {
         }
 
         console.log(
-            "PokeAlarm JSON filter file for Pokemon that are " + rarity + " were written to the file " + filename + "!"
+            "\nPokeAlarm JSON filter file for Pokemon that are " + rarity + " were written to the file " + filename + "!"
         );
     });
 };
 
-pokemon.generateFilter(config.rarities);
+pokemon.generateFilter(config.rarities, config.additional_pokemon);
 
