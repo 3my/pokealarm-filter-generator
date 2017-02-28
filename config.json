@@ -2,6 +2,8 @@
     "rarities": "rare,very rare",
     "same_file": "True",
     "additional_pokemon": [
-        {"Name":"Dratini"}
+        {"Name":"Dratini", "Options":"True"},
+        {"Name":"Magikarp", "Options":{"min_iv":"100"}},
+        {"Name":"Eevee", "Options":{"min_iv":"100"}}
     ]
 }

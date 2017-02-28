@@ -96,7 +96,7 @@ pokemon.generateFilter = function(rarities, additional_pokemon, enabled, min_dis
         for (var j = 0; j < additional_pokemon.length; j++) {
             if (!filter.hasOwnProperty(additional_pokemon[j].Name)) {
                 console.log("Adding additional Pokemon " + additional_pokemon[j].Name + " to the PokeAlarm filter.");
-                filter[additional_pokemon[j].Name] = "True"
+                filter[additional_pokemon[j].Name] = additional_pokemon[j].Options;
             }
         }
 
