@@ -1,5 +1,5 @@
 {
-    "rarities": "rare,very rare",
+    "types": "fighting,grass,ghost",
     "same_file": "True",
     "additional_pokemon": [
         {"Name":"Dratini", "Options":"True"},

@@ -1,18 +1,44 @@
 var Filter = class {
-    constructor(enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing, pokemon) {
+    constructor(enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing, pokemon, min_cp, max_cp, min_atk, max_atk, min_def, max_def, min_sta, max_sta, quick_move, charge_move, size, gender) {
         enabled         = enabled || "True";
         min_dist        = min_dist || "0";
         max_dist        = max_dist || "inf";
+        min_cp          = min_cp || "0";
+        max_cp          = max_cp || "4760";
         min_iv          = min_iv || "0";
         max_iv          = max_iv || "100";
-        ignore_missing  = ignore_missing || "False"
+        min_atk         = min_atk || "0";
+        max_atk         = max_atk || "15";
+        min_def         = min_def || "0";
+        max_def         = max_def || "15";
+        min_sta         = min_sta || "0";
+        max_sta         = max_sta || "15";
+        quick_move      = quick_move || null;
+        charge_move     = charge_move || null;
+        size            = size || null;
+        gender          = gender || null;
+        ignore_missing  = ignore_missing || "False";
 
-        this.enabled        = enabled;
-        this.min_dist       = min_dist;
-        this.max_dist       = max_dist;
-        this.min_iv         = min_iv;
-        this.max_iv         = max_iv;
-        this.ignore_missing = ignore_missing;
+        this.enabled                = enabled;
+        this.default                = {};
+        this.default.min_dist       = min_dist;
+        this.default.max_dist       = max_dist;
+        this.default.min_cp         = min_cp;
+        this.default.max_cp         = max_cp;
+        this.default.min_iv         = min_iv;
+        this.default.max_iv         = max_iv;
+        this.default.min_atk        = min_atk;
+        this.default.max_atk        = max_atk;
+        this.default.min_def        = min_def;
+        this.default.max_def        = max_def;
+        this.default.min_sta        = min_sta;
+        this.default.max_sta        = max_sta;
+        this.default.quick_move     = quick_move;
+        this.default.charge_move    = charge_move;
+        this.default.moveset        = null;
+        this.default.size           = size;
+        this.default.gender         = gender;
+        this.default.ignore_missing = ignore_missing;
     }
 };
 
@@ -26,8 +52,7 @@ var pokemon = require('./pokemon.json');
 /**
  * Generates a pokealarm filter based for a specified rarity/rarities.
  *
- * @param string rarity             Comma separated string of rarities with no spaces i.e. "very rare,rare" or "rare".
- *                                  Options: Common, Uncommon, Rare, Very Rare, Ultra Rare.
+ * @param string types              Comma separated string of types with no spaces i.e. "grass,fighting" or "grass".
  * @param string enabled            Enable the filter? Default True.
  * @param Array additional_pokemon  An array of objects i.e. [{"Pokemon":"True"}]
  * @param string min_dist           Minimum distance. Default 0.
@@ -36,20 +61,20 @@ var pokemon = require('./pokemon.json');
  * @param string max_iv             Maximum IV of Pokemon. Default 100.
  * @param string ignore_missing     Default False.
  */
-pokemon.generateFilter = function(rarities, additional_pokemon, enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing) {
+pokemon.generateFilter = function(types, additional_pokemon, enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing) {
     console.log("PokeAlarm filter generator - Created by 3my\n");
 
-    if (typeof rarities !== "string") {
-        console.log("rarities parameter not given. Setting to default ['common'].");
-        rarities = ['common'];
+    if (typeof types !== "string") {
+        console.log("types parameter not given. Setting to default ['grass'].");
+        types = ['grass'];
     } else {
         // Just incase the format is incorrect, set default (common).
-        if (!(rarities.split(',') instanceof Array)) {
-            console.error("invalid format for rarities. Setting to default ['common']");
-            rarities = ['common'];
+        if (!(types.split(',') instanceof Array)) {
+            console.error("invalid format for types. Setting to default ['grass']");
+            types = ['grass'];
         } else {
-            console.log("multiple rarities provided (" + rarities + ")");
-            rarities = rarities.split(',');
+            console.log("multiple types provided (" + types + ")");
+            types = types.split(',');
         }
     }
 
@@ -60,65 +85,31 @@ pokemon.generateFilter = function(rarities, additional_pokemon, enabled, min_dis
         additional_pokemon = [];
     }
 
-    var filenames = [];
-
-    var filter = new Filter(enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing);
-
-    for (var i = 0; i < rarities.length; i++) {
-        if (config.same_file === "True") {
-            console.log("Adding Pokemon rarity " + rarities[i] + " to the same filter!");
-        }
-
-        if (config.same_file === "False" && i > 0) {
-            console.log("Creating a new filter for Pokemon rarity " + rarities[i] + "!");
-            var filter = new Filter(enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing);
-        }
+    for (var i = 0; i < types.length; i++) {
+        // Create a filter object for this type.
+        var filter = new Filter(enabled, min_dist, max_dist, min_iv, max_iv, ignore_missing);
 
         for (var key in this) {
             var pokemonObject = this[key];
 
-            if (pokemonObject.rarity === 'undefined') {
-                continue;
-            }
+            for (var type in pokemonObject.types) {
+                var pokemonType = this[key].types[type].type;
 
-            if (typeof pokemonObject === 'function') {
-                continue;
-            }
-
-            pokemonObject.rarity = pokemonObject.rarity.toLowerCase();
-
-            if (rarities[i].toLowerCase() === pokemonObject.rarity) {
-                console.log("Adding " + pokemonObject.name + " to the PokeAlarm filter.");
-                filter[pokemonObject.name] = "True";
+                // Found something of the specified type. Add to the filter.
+                if (pokemonType.toLowerCase() == types[i]) {
+                    filter[pokemonObject.name] = "True";
+                }
             }
         }
 
-        for (var j = 0; j < additional_pokemon.length; j++) {
-            if (!filter.hasOwnProperty(additional_pokemon[j].Name)) {
-                console.log("Adding additional Pokemon " + additional_pokemon[j].Name + " to the PokeAlarm filter.");
-                filter[additional_pokemon[j].Name] = additional_pokemon[j].Options;
-            }
-        }
+        var type = types[i];
+        var filename = type.split(' ').join('') + ".json";
 
-        var rarity = rarities[i];
-        var filename = rarity.split(' ').join('') + ".json";
-
-        filenames.push(rarity.split(' ').join(''));
-
-        if (config.same_file === "True") {
-            if (i === rarities.length - 1) {
-                filename = filenames.join('_') + ".json";
-                writeFilter(rarity, filename, filter);
-            }
-        } else {
-            writeFilter(rarity, filename, filter);
-        }
-
-        console.log("\n");
+        writeFilter(type, filename, filter);
     }
 };
 
-var writeFilter = function(rarity, filename, filter) {
+var writeFilter = function(type, filename, filter) {
     var beautifulJSON = beautify({"pokemon": filter}, null, 2, 132);
 
     var directory = "filters/";
@@ -137,10 +128,10 @@ var writeFilter = function(rarity, filename, filter) {
         }
 
         console.log(
-            "\nPokeAlarm JSON filter file for Pokemon that are " + rarity + " were written to the file " + filename + "!"
+            "\nPokeAlarm JSON filter file for Pokemon that are " + type + " were written to the file " + filename + "!"
         );
     });
 };
 
-pokemon.generateFilter(config.rarities, config.additional_pokemon);
+pokemon.generateFilter(config.types, config.additional_pokemon);
 
